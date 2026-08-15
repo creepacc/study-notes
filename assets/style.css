@@ -365,7 +365,11 @@ body.sidebar-gone .sidebar-float { display: inline-flex; }
   font-weight: 700;
   letter-spacing: .06em;
 }
+.view-actions { display: flex; align-items: center; gap: 10px; }
 .btn-sm { margin-top: 0; padding: 10px 20px; font-size: .9rem; }
+.apply-save-status { font-size: .8rem; color: var(--text-dim); max-width: 240px; line-height: 1.4; }
+.apply-save-status.ok { color: #16a34a; }
+.apply-save-status.err { color: #d64550; }
 
 /* ---- 简历视图 ---- */
 .resume-body {

@@ -412,6 +412,99 @@
       closeApplyModal();
     });
 
+    /* ---- 保存到 GitHub 仓库(永久) ---- */
+    var applySave = document.getElementById('apply-save');
+    var applySaveStatus = document.getElementById('apply-save-status');
+    var GH_OWNER = 'creepacc';
+    var GH_REPO = 'study-notes';
+    var GH_PATH = '学习笔记/apply.json';
+    var GH_TOKEN_KEY = 'site:gh_token';
+
+    function applyStatusMsg(msg, ok) {
+      applySaveStatus.textContent = msg;
+      var cls = 'apply-save-status';
+      if (ok) cls += ' ok';
+      else if (msg) cls += ' err';
+      applySaveStatus.className = cls;
+    }
+
+    function getToken() {
+      try { return localStorage.getItem(GH_TOKEN_KEY) || ''; } catch (e) { return ''; }
+    }
+
+    function promptToken() {
+      var t = window.prompt('粘贴你的 GitHub 个人访问令牌(PAT)。它只保存在本浏览器 localStorage,不会写进仓库。\n创建方法见对话说明。');
+      if (t) {
+        t = t.trim();
+        if (t) {
+          try { localStorage.setItem(GH_TOKEN_KEY, t); } catch (e) {}
+          return t;
+        }
+      }
+      return '';
+    }
+
+    function utf8B64(str) {
+      var bytes = new TextEncoder().encode(str);
+      var bin = '';
+      bytes.forEach(function (b) { bin += String.fromCharCode(b); });
+      return btoa(bin);
+    }
+
+    function loadRemote() {
+      fetch('学习笔记/apply.json')
+        .then(function (res) { if (!res.ok) throw new Error('no file'); return res.json(); })
+        .then(function (data) {
+          if (!Array.isArray(data)) return;
+          applyItems = data;
+          applyItems.forEach(function (it) {
+            if (!STATUSES.some(function (s) { return s.key === it.status; })) it.status = 'screen';
+            if (it.id > applyUid) applyUid = it.id;
+          });
+          renderApply();
+        })
+        .catch(function () {});
+    }
+
+    function saveToRepo() {
+      var token = getToken();
+      if (!token) token = promptToken();
+      if (!token) { applyStatusMsg('未配置令牌,无法保存', false); return; }
+
+      applyStatusMsg('保存中…', true);
+      var encPath = GH_PATH.split('/').map(encodeURIComponent).join('/');
+      var url = 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/' + encPath;
+
+      fetch(url)
+        .then(function (res) { return res.json(); })
+        .then(function (cur) {
+          var body = { message: 'update apply data', content: utf8B64(JSON.stringify(applyItems, null, 2)) };
+          if (cur && cur.sha) body.sha = cur.sha;
+          return fetch(url, {
+            method: 'PUT',
+            headers: {
+              'Authorization': 'token ' + token,
+              'Content-Type': 'application/json',
+              'User-Agent': 'study-notes-site'
+            },
+            body: JSON.stringify(body)
+          });
+        })
+        .then(function (res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json();
+        })
+        .then(function () {
+          try { localStorage.setItem(applyKey, JSON.stringify(applyItems)); } catch (e) {}
+          applyStatusMsg('已保存 ✓ 约1分钟后所有设备可见', true);
+        })
+        .catch(function (err) {
+          applyStatusMsg('保存失败:请检查令牌/网络 (' + err.message + ')', false);
+        });
+    }
+    applySave.addEventListener('click', saveToRepo);
+
     renderApply();
+    loadRemote();
   }
 })();
