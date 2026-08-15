@@ -368,8 +368,21 @@
         });
         wrap.appendChild(sel);
 
+        var del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'apply-del';
+        del.textContent = '✕';
+        del.title = '删除该条';
+        del.setAttribute('aria-label', '删除 ' + it.company);
+        del.addEventListener('click', function () {
+          if (!window.confirm('删除「' + it.company + '」这条投递?')) return;
+          applyItems = applyItems.filter(function (x) { return x !== it; });
+          saveApply();
+          renderApply();
+        });
         li.appendChild(info);
         li.appendChild(wrap);
+        li.appendChild(del);
         applyList.appendChild(li);
       });
     }

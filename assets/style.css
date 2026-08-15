@@ -473,6 +473,26 @@ body.sidebar-gone .sidebar-float { display: inline-flex; }
   color: var(--text);
   border-color: rgba(108, 123, 255, 0.5);
 }
+.apply-del {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: .9rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .2s ease;
+}
+.apply-del:hover {
+  color: #d64550;
+  border-color: rgba(220, 38, 38, 0.45);
+  background: rgba(220, 38, 38, 0.08);
+}
 
 /* ---- 弹窗 ---- */
 .modal {
