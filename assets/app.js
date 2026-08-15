@@ -5,7 +5,7 @@
   document.addEventListener('DOMContentLoaded', function () {
     if (document.getElementById('intro')) {
       runIntro();
-    } else if (document.getElementById('note-list')) {
+    } else if (document.getElementById('note-tree')) {
       initNotesApp();
     }
   });
@@ -62,8 +62,8 @@
         if (p.x < -12) p.x = W + 12;
         if (p.x > W + 12) p.x = -12;
         var g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 4);
-        g.addColorStop(0, 'rgba(160,180,255,' + p.a + ')');
-        g.addColorStop(1, 'rgba(160,180,255,0)');
+        g.addColorStop(0, 'rgba(110,120,255,' + p.a + ')');
+        g.addColorStop(1, 'rgba(110,120,255,0)');
         ctx.fillStyle = g;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r * 4, 0, Math.PI * 2);
@@ -102,49 +102,29 @@
 
   /* ================= 学习笔记应用 ================= */
   function initNotesApp() {
-    var listEl = document.getElementById('note-list');
+    var treeEl = document.getElementById('note-tree');
     var contentEl = document.getElementById('note-content');
-    var tocEl = document.getElementById('toc-list');
-    var tocBox = document.getElementById('sidebar-toc');
     var viewerEl = document.querySelector('.note-viewer');
-    var tocItems = [];
+    var items = [];
     var lastActive = null;
-    var tocUid = 0;
-    var notes = [];
+    var uid = 0;
 
     fetch('notes.json')
       .then(function (res) { return res.json(); })
       .then(function (data) {
-        notes = data;
-        notes.forEach(function (n, idx) {
-          var li = document.createElement('li');
-          var a = document.createElement('a');
-          a.href = '#';
-          a.textContent = n.title;
-          if (idx === 0) a.className = 'active';
-          a.addEventListener('click', function (e) {
-            e.preventDefault();
-            var all = listEl.querySelectorAll('a');
-            for (var k = 0; k < all.length; k++) all[k].classList.remove('active');
-            a.classList.add('active');
-            loadNote(n.file);
-          });
-          li.appendChild(a);
-          listEl.appendChild(li);
-        });
-        if (notes.length) loadNote(notes[0].file);
+        if (data.length) loadNote(data[0].file, data[0].title);
       })
       .catch(function () {
-        contentEl.innerHTML = '<p class="loading">笔记列表加载失败</p>';
+        contentEl.innerHTML = '<p class="loading">笔记加载失败</p>';
       });
 
-    function loadNote(file) {
+    function loadNote(file, title) {
       contentEl.innerHTML = '<div class="loading">加载中…</div>';
       fetch(file)
         .then(function (res) { return res.text(); })
         .then(function (md) {
           contentEl.innerHTML = marked.parse(md);
-          buildToc();
+          buildTree(title);
           contentEl.scrollTop = 0;
           viewerEl.scrollTop = 0;
         })
@@ -153,7 +133,7 @@
         });
     }
 
-    /* ---------- 章节目录 ---------- */
+    /* ---------- 树形章节目录 ---------- */
     function scrollToHeading(h) {
       var top = h.getBoundingClientRect().top - viewerEl.getBoundingClientRect().top + viewerEl.scrollTop - 16;
       viewerEl.scrollTo({ top: top, behavior: 'smooth' });
@@ -162,12 +142,20 @@
     function scrollSpy() {
       var line = viewerEl.getBoundingClientRect().top + 90;
       var active = null;
-      for (var i = 0; i < tocItems.length; i++) {
-        if (tocItems[i].h.getBoundingClientRect().top <= line) active = tocItems[i];
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].h.getBoundingClientRect().top <= line) active = items[i];
       }
       if (active !== lastActive) {
         if (lastActive) lastActive.a.classList.remove('active');
-        if (active) active.a.classList.add('active');
+        if (active) {
+          active.a.classList.add('active');
+          // 展开当前小节所在的所有父级文件夹
+          var node = active.a.parentElement;
+          while (node && node !== treeEl) {
+            node = node.parentElement;
+            if (node && node.classList && node.classList.contains('tree-folder')) node.classList.add('open');
+          }
+        }
         lastActive = active;
       }
     }
@@ -180,42 +168,64 @@
       }
     });
 
-    function buildToc() {
-      tocEl.innerHTML = '';
-      tocItems = [];
+    function makeFolder(label, className) {
+      var li = document.createElement('li');
+      li.className = className;
+      var row = document.createElement('div');
+      row.className = 'tree-row';
+      var caret = document.createElement('span');
+      caret.className = 'caret';
+      var labelEl = document.createElement('span');
+      labelEl.className = 'tree-label';
+      labelEl.textContent = label;
+      row.appendChild(caret);
+      row.appendChild(labelEl);
+      row.addEventListener('click', function () { li.classList.toggle('open'); });
+      li.appendChild(row);
+      var child = document.createElement('ul');
+      child.className = 'tree-children';
+      li.appendChild(child);
+      return { li: li, child: child };
+    }
+
+    function makeLeaf(h) {
+      var li = document.createElement('li');
+      li.className = 'tree-leaf';
+      var a = document.createElement('a');
+      a.href = '#' + h.id;
+      a.textContent = h.textContent;
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        scrollToHeading(h);
+      });
+      li.appendChild(a);
+      items.push({ h: h, a: a });
+      return li;
+    }
+
+    function buildTree(noteTitle) {
+      treeEl.innerHTML = '';
+      items = [];
       lastActive = null;
       var heads = contentEl.querySelectorAll('h2, h3');
-      if (!heads.length) { tocBox.hidden = true; return; }
-      tocBox.hidden = false;
+      if (!heads.length) return;
 
-      var list = document.createElement('ul');
-      var lastH2Li = null;
+      var root = makeFolder(noteTitle || '笔记', 'tree-folder tree-root');
+      root.li.classList.add('open');
+      treeEl.appendChild(root.li);
+
+      var chapter = null;
       heads.forEach(function (h) {
-        if (!h.id) h.id = 'sec-' + (++tocUid);
-        var li = document.createElement('li');
-        li.className = 'toc-' + h.tagName.toLowerCase();
-        var a = document.createElement('a');
-        a.href = '#' + h.id;
-        a.textContent = h.textContent;
-        a.addEventListener('click', function (e) {
-          e.preventDefault();
-          scrollToHeading(h);
-        });
-        li.appendChild(a);
-        tocItems.push({ h: h, a: a });
-
+        if (!h.id) h.id = 'sec-' + (++uid);
         if (h.tagName === 'H2') {
-          lastH2Li = li;
-          list.appendChild(li);
-        } else if (lastH2Li) {
-          var sub = lastH2Li.querySelector('ul');
-          if (!sub) { sub = document.createElement('ul'); lastH2Li.appendChild(sub); }
-          sub.appendChild(li);
+          chapter = makeFolder(h.textContent, 'tree-folder');
+          root.child.appendChild(chapter.li);
+        } else if (chapter) {
+          chapter.child.appendChild(makeLeaf(h));
         } else {
-          list.appendChild(li);
+          root.child.appendChild(makeLeaf(h));
         }
       });
-      tocEl.appendChild(list);
       scrollSpy();
     }
   }

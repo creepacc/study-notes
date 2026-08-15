@@ -1,4 +1,4 @@
-# TensorRT-LLM 学习笔记（整理版）
+# 笔记（整理版）
 
 > （由 tensorRT-llm.docx 重新排版整理：修正错误、规范层级；并依据已安装的 tensorrt_llm/builder.py 补全 model.config 与 build_config 的全部优化项）
 
