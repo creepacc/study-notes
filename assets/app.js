@@ -304,7 +304,8 @@
       { key: 'quiz', label: '测评' },
       { key: 'written', label: '笔试' },
       { key: 'interview', label: '面试' },
-      { key: 'offer', label: 'offer' }
+      { key: 'offer', label: 'offer' },
+      { key: 'fail', label: '挂掉' }
     ];
     var applyKey = 'site:apply';
     var applyList = document.getElementById('apply-list');

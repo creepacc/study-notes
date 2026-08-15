@@ -27,6 +27,7 @@
   --status-written: #e7eaf4;
   --status-interview: #d4d9ea;
   --status-offer: #d9f2e3;
+  --status-fail: #fbe2e2;
   --title-grad: linear-gradient(180deg, #1c2440, #4f5bff);
   --hero-grad: linear-gradient(180deg, #171e38, #4f5bff);
   --intro-bg:
@@ -78,6 +79,7 @@ html[data-theme="dark"] {
   --status-written: #1b2540;
   --status-interview: #24304f;
   --status-offer: #102b1d;
+  --status-fail: #331313;
   --title-grad: linear-gradient(180deg, #ffffff, #aeb8ff);
   --hero-grad: linear-gradient(180deg, #ffffff, #b7c0ff);
   --intro-bg:
@@ -428,6 +430,7 @@ body.sidebar-gone .sidebar-float { display: inline-flex; }
 .apply-item.status-written { background: var(--status-written); }
 .apply-item.status-interview { background: var(--status-interview); }
 .apply-item.status-offer { background: var(--status-offer); border-color: rgba(34, 197, 94, 0.55); }
+.apply-item.status-fail { background: var(--status-fail); border-color: rgba(220, 38, 38, 0.6); }
 .apply-info {
   display: flex;
   flex-direction: column;
