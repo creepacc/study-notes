@@ -1,12 +1,13 @@
-/* 学习笔记 个人站 · app.js */
+/* 沉淀 个人站 · app.js */
 (function () {
   'use strict';
 
   function start() {
     if (document.getElementById('intro')) {
       runIntro();
-    } else if (document.getElementById('note-tree')) {
-      initNotesApp();
+    }
+    if (document.getElementById('sidebar')) {
+      initShell();
     }
   }
 
@@ -31,7 +32,7 @@
     // 把标题拆成逐字 span
     var text = title.textContent.trim();
     title.textContent = '';
-    var spans = Array.prototype.map.call(text, function (ch, i) {
+    Array.prototype.map.call(text, function (ch, i) {
       var s = document.createElement('span');
       s.className = 'letter';
       s.textContent = ch === ' ' ? ' ' : ch;
@@ -39,7 +40,6 @@
       title.appendChild(s);
       return s;
     });
-    var _ = spans;
 
     // 粒子背景
     var ctx = canvas.getContext('2d');
@@ -108,47 +108,109 @@
     })(start);
   }
 
-  /* ================= 学习笔记应用 ================= */
-  function initNotesApp() {
-    var treeEl = document.getElementById('note-tree');
+  /* ================= 应用外壳 ================= */
+  function initShell() {
+    var sidebar = document.getElementById('sidebar');
+    var hideBtn = document.getElementById('sidebar-hide');
+    var openBtn = document.getElementById('sidebar-open');
+    var backdrop = document.getElementById('backdrop');
+    var colNav = document.getElementById('col-nav');
     var contentEl = document.getElementById('note-content');
-    var viewerEl = document.querySelector('.note-viewer');
+    var notesTreeEl = document.getElementById('col-notes-tree');
+    var viewer = document.querySelector('#view-notes .note-viewer');
     var items = [];
     var lastActive = null;
     var uid = 0;
+    var MOBILE = 860;
 
-    fetch('notes.json')
+    /* ---- 侧边栏隐藏 / 展开 ---- */
+    function sidebarOpen() {
+      if (window.innerWidth <= MOBILE) return sidebar.classList.contains('open');
+      return !sidebar.classList.contains('hidden');
+    }
+    function setSidebar(open, save) {
+      var mobile = window.innerWidth <= MOBILE;
+      sidebar.classList.toggle('hidden', !open && !mobile);
+      sidebar.classList.toggle('open', open && mobile);
+      document.body.classList.toggle('sidebar-gone', !open && !mobile);
+      backdrop.classList.toggle('show', open && mobile);
+      if (save) {
+        try { localStorage.setItem('site:sidebar', open ? 'shown' : 'hidden'); } catch (e) {}
+      }
+    }
+    hideBtn.addEventListener('click', function () { setSidebar(false, true); });
+    openBtn.addEventListener('click', function () { setSidebar(true, true); });
+    backdrop.addEventListener('click', function () { setSidebar(false, true); });
+    window.addEventListener('resize', function () { setSidebar(sidebarOpen(), false); });
+
+    var stored;
+    try { stored = localStorage.getItem('site:sidebar'); } catch (e) {}
+    if (window.innerWidth <= MOBILE) setSidebar(false, false);
+    else setSidebar(stored !== 'hidden', false);
+
+    /* ---- 视图切换 ---- */
+    var views = {
+      resume: document.getElementById('view-resume'),
+      notes: document.getElementById('view-notes'),
+      job: document.getElementById('view-job')
+    };
+    var cols = colNav.querySelectorAll('.col-item');
+
+    function showView(name) {
+      Object.keys(views).forEach(function (k) {
+        views[k].classList.toggle('active', k === name);
+      });
+      Array.prototype.forEach.call(cols, function (c) {
+        c.classList.toggle('active', c.getAttribute('data-view') === name);
+      });
+      if (name === 'notes') viewer.scrollTop = 0;
+    }
+
+    Array.prototype.forEach.call(cols, function (c) {
+      c.addEventListener('click', function (e) {
+        // 点击笔记章节树内部(章节/小节)时,不触发栏目切换
+        var t = e.target;
+        if (t && t.closest && t.closest('#col-notes-tree')) return;
+        var v = c.getAttribute('data-view');
+        if (v === 'notes') c.classList.toggle('open');
+        showView(v);
+        if (window.innerWidth <= MOBILE) setSidebar(false, true);
+      });
+    });
+    showView('notes');
+
+    /* ---- 加载笔记 + 章节树 ---- */
+    fetch('学习笔记/notes.json')
       .then(function (res) { return res.json(); })
       .then(function (data) {
-        if (data.length) loadNote(data[0].file, data[0].title);
+        if (data.length) loadNote('学习笔记/' + data[0].file);
       })
       .catch(function () {
         contentEl.innerHTML = '<p class="loading">笔记加载失败</p>';
       });
 
-    function loadNote(file, title) {
+    function loadNote(file) {
       contentEl.innerHTML = '<div class="loading">加载中…</div>';
       fetch(file)
         .then(function (res) { return res.text(); })
         .then(function (md) {
           contentEl.innerHTML = marked.parse(md);
-          buildTree(title);
-          contentEl.scrollTop = 0;
-          viewerEl.scrollTop = 0;
+          buildTree();
+          viewer.scrollTop = 0;
         })
         .catch(function () {
           contentEl.innerHTML = '<p class="loading">笔记内容加载失败</p>';
         });
     }
 
-    /* ---------- 树形章节目录 ---------- */
+    /* ---- 章节树 ---- */
     function scrollToHeading(h) {
-      var top = h.getBoundingClientRect().top - viewerEl.getBoundingClientRect().top + viewerEl.scrollTop - 16;
-      viewerEl.scrollTo({ top: top, behavior: 'smooth' });
+      var top = h.getBoundingClientRect().top - viewer.getBoundingClientRect().top + viewer.scrollTop - 16;
+      viewer.scrollTo({ top: top, behavior: 'smooth' });
     }
 
     function scrollSpy() {
-      var line = viewerEl.getBoundingClientRect().top + 90;
+      var line = viewer.getBoundingClientRect().top + 90;
       var active = null;
       for (var i = 0; i < items.length; i++) {
         if (items[i].h.getBoundingClientRect().top <= line) active = items[i];
@@ -157,9 +219,8 @@
         if (lastActive) lastActive.a.classList.remove('active');
         if (active) {
           active.a.classList.add('active');
-          // 展开当前小节所在的所有父级文件夹
           var node = active.a.parentElement;
-          while (node && node !== treeEl) {
+          while (node && node !== notesTreeEl) {
             node = node.parentElement;
             if (node && node.classList && node.classList.contains('tree-folder')) node.classList.add('open');
           }
@@ -169,16 +230,16 @@
     }
 
     var spyTicking = false;
-    viewerEl.addEventListener('scroll', function () {
+    viewer.addEventListener('scroll', function () {
       if (!spyTicking) {
         spyTicking = true;
         requestAnimationFrame(function () { scrollSpy(); spyTicking = false; });
       }
     });
 
-    function makeFolder(label, className) {
+    function makeFolder(label) {
       var li = document.createElement('li');
-      li.className = className;
+      li.className = 'tree-folder';
       var row = document.createElement('div');
       row.className = 'tree-row';
       var caret = document.createElement('span');
@@ -188,7 +249,10 @@
       labelEl.textContent = label;
       row.appendChild(caret);
       row.appendChild(labelEl);
-      row.addEventListener('click', function () { li.classList.toggle('open'); });
+      row.addEventListener('click', function (e) {
+        e.stopPropagation();
+        li.classList.toggle('open');
+      });
       li.appendChild(row);
       var child = document.createElement('ul');
       child.className = 'tree-children';
@@ -204,6 +268,7 @@
       a.textContent = h.textContent;
       a.addEventListener('click', function (e) {
         e.preventDefault();
+        e.stopPropagation();
         scrollToHeading(h);
       });
       li.appendChild(a);
@@ -211,27 +276,22 @@
       return li;
     }
 
-    function buildTree(noteTitle) {
-      treeEl.innerHTML = '';
+    function buildTree() {
+      notesTreeEl.innerHTML = '';
       items = [];
       lastActive = null;
       var heads = contentEl.querySelectorAll('h2, h3');
       if (!heads.length) return;
-
-      var root = makeFolder(noteTitle || '笔记', 'tree-folder tree-root');
-      root.li.classList.add('open');
-      treeEl.appendChild(root.li);
-
       var chapter = null;
       heads.forEach(function (h) {
         if (!h.id) h.id = 'sec-' + (++uid);
         if (h.tagName === 'H2') {
-          chapter = makeFolder(h.textContent, 'tree-folder');
-          root.child.appendChild(chapter.li);
+          chapter = makeFolder(h.textContent);
+          notesTreeEl.appendChild(chapter.li);
         } else if (chapter) {
           chapter.child.appendChild(makeLeaf(h));
         } else {
-          root.child.appendChild(makeLeaf(h));
+          notesTreeEl.appendChild(makeLeaf(h));
         }
       });
       scrollSpy();

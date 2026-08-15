@@ -21,28 +21,76 @@
   </div>
 
   <!-- 主内容 -->
-  <main id="main">
-    <header class="hero">
-      <nav class="nav">
-        <span class="logo">◆ 沉淀</span>
-        <div class="nav-links">
-          <span class="theme-toggle"></span>
-          <a href="学习笔记/简历/index.html" class="nav-link">简历</a>
-          <a href="学习笔记/index.html" class="nav-link">进入沉淀 →</a>
+  <div id="main">
+    <div class="app-shell">
+
+      <!-- 全局左侧导航 -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-head">
+          <div class="brand-row">
+            <span class="logo">◆ 沉淀</span>
+            <div class="brand-actions">
+              <span class="theme-toggle"></span>
+              <button class="icon-btn" id="sidebar-hide" title="隐藏导航" aria-label="隐藏导航">⏴</button>
+            </div>
+          </div>
         </div>
-      </nav>
-      <div class="hero-body">
-        <h1 class="hero-title">沉淀</h1>
-        <p class="hero-sub">
-          个人技术笔记站点 — 沉淀 TensorRT / LLM 推理、深度学习部署与工具链中的理解与实践。
-        </p>
-        <a href="学习笔记/index.html" class="btn">
-          <span>进入沉淀</span>
-          <span class="btn-arrow">→</span>
-        </a>
-      </div>
-    </header>
-  </main>
+        <nav class="col-nav" id="col-nav">
+          <ul>
+            <li class="col-item" data-view="resume">
+              <div class="tree-row col"><span class="tree-label">简历</span></div>
+            </li>
+            <li class="col-item tree-folder" data-view="notes" id="col-notes">
+              <div class="tree-row col"><span class="caret"></span><span class="tree-label">笔记</span></div>
+              <ul class="tree-children" id="col-notes-tree"></ul>
+            </li>
+            <li class="col-item" data-view="job">
+              <div class="tree-row col"><span class="tree-label">秋招投递以及面试经验</span></div>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      <button class="sidebar-float" id="sidebar-open" title="展开导航" aria-label="展开导航">☰</button>
+      <div class="backdrop" id="backdrop"></div>
+
+      <!-- 视图区 -->
+      <main class="main">
+
+        <!-- 简历 -->
+        <section class="view" id="view-resume">
+          <header class="view-head">
+            <span class="view-title">简历</span>
+            <a class="btn btn-sm" href="学习笔记/简历/王博_简历.pdf" download>
+              <span>下载简历</span>
+              <span class="btn-arrow">↓</span>
+            </a>
+          </header>
+          <div class="resume-body">
+            <img class="resume-img" src="学习笔记/简历/王博_简历.png" alt="王博简历" />
+          </div>
+        </section>
+
+        <!-- 笔记 -->
+        <section class="view" id="view-notes">
+          <div class="note-viewer">
+            <article class="note-content" id="note-content">
+              <div class="loading">加载中…</div>
+            </article>
+          </div>
+        </section>
+
+        <!-- 秋招投递以及面试经验 -->
+        <section class="view" id="view-job">
+          <div class="empty-view">
+            <h1 class="empty-title">秋招投递以及面试经验</h1>
+            <p class="empty-sub">暂无</p>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
 
   <script src="assets/theme.js"></script>
   <script src="assets/gate.js"></script>
