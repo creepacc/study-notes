@@ -179,6 +179,7 @@ a { color: inherit; text-decoration: none; }
   padding: 22px clamp(20px, 6vw, 64px);
   border-bottom: 1px solid var(--border);
 }
+.nav-links { display: flex; gap: 12px; }
 .logo {
   font-weight: 700;
   letter-spacing: .12em;
@@ -273,6 +274,8 @@ a { color: inherit; text-decoration: none; }
   transition: color .2s ease;
 }
 .back-link:hover { color: var(--text); }
+.head-links { display: flex; gap: 16px; margin-bottom: 14px; }
+.head-links .back-link { margin-bottom: 0; }
 .sidebar-head h2 {
   font-size: 1.3rem;
   letter-spacing: .1em;
@@ -437,6 +440,93 @@ a { color: inherit; text-decoration: none; }
 }
 .note-content tbody tr:nth-child(even) { background: var(--surface-2); }
 .note-content strong { color: #171e38; }
+
+/* ============ 通行密码门 ============ */
+.gate {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(900px 600px at 75% 15%, rgba(108, 123, 255, 0.16), transparent 60%),
+    radial-gradient(700px 500px at 10% 90%, rgba(14, 165, 233, 0.12), transparent 55%),
+    var(--bg);
+  transition: opacity .5s ease;
+}
+.gate.ok { opacity: 0; pointer-events: none; }
+.gate-card {
+  width: min(400px, 88vw);
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 44px 40px 38px;
+  text-align: center;
+  box-shadow: 0 24px 70px rgba(30, 41, 80, 0.14);
+}
+.gate-badge {
+  font-size: .68rem;
+  letter-spacing: .35em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 18px;
+}
+.gate-title {
+  font-size: 1.9rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  background: linear-gradient(180deg, #171e38, #4f5bff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.gate-sub { margin-top: 10px; color: var(--text-dim); font-size: .9rem; letter-spacing: .18em; }
+.gate-form { display: flex; gap: 10px; margin-top: 28px; }
+.gate-input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+  color: var(--text);
+  font-size: .95rem;
+  outline: none;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.gate-input:focus { border-color: var(--accent-1); box-shadow: 0 0 0 3px rgba(108, 123, 255, 0.15); }
+.gate-btn {
+  padding: 12px 22px;
+  border-radius: 999px;
+  border: none;
+  background: var(--grad);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.gate-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(108, 123, 255, 0.35); }
+.gate-err { margin-top: 16px; color: #d64550; font-size: .85rem; }
+
+/* ============ 简历页 ============ */
+.resume-page { display: flex; flex-direction: column; height: 100vh; }
+.resume-head {
+  padding: 22px clamp(20px, 6vw, 48px);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-soft);
+}
+.resume-head-row { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+.resume-head h2 { font-size: 1.4rem; letter-spacing: .1em; }
+.btn-sm { margin-top: 0; padding: 10px 20px; font-size: .9rem; }
+.resume-frame-wrap { flex: 1; min-height: 0; padding: 20px; }
+.resume-frame {
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+}
 
 /* ============ 响应式 ============ */
 @media (max-width: 860px) {

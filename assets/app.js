@@ -2,11 +2,19 @@
 (function () {
   'use strict';
 
-  document.addEventListener('DOMContentLoaded', function () {
+  function start() {
     if (document.getElementById('intro')) {
       runIntro();
     } else if (document.getElementById('note-tree')) {
       initNotesApp();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.SiteGate && !window.SiteGate.isUnlocked()) {
+      window.addEventListener('site:unlocked', start, { once: true });
+    } else {
+      start();
     }
   });
 
