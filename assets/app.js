@@ -466,6 +466,29 @@
         .catch(function () {});
     }
 
+    var applyShaKey = 'site:apply_sha';
+
+    function apiGet(url, token) {
+      return fetch(url, { headers: token ? { 'Authorization': 'token ' + token } : {} })
+        .then(function (res) { return res.json(); })
+        .then(function (cur) { return cur && cur.sha ? cur.sha : null; });
+    }
+
+    function apiPut(url, token, content, sha) {
+      var body = { message: 'update apply data', content: content };
+      if (sha) body.sha = sha;
+      return fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Authorization': 'token ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      }).then(function (res) {
+        return res.json().then(function (j) { return { status: res.status, j: j }; });
+      });
+    }
+
     function saveToRepo() {
       var token = getToken();
       if (!token) token = promptToken();
@@ -474,32 +497,33 @@
       applyStatusMsg('保存中…', true);
       var encPath = GH_PATH.split('/').map(encodeURIComponent).join('/');
       var url = 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/' + encPath;
+      var content = utf8B64(JSON.stringify(applyItems, null, 2));
+      var sha = null;
+      try { sha = localStorage.getItem(applyShaKey) || null; } catch (e) {}
 
-      fetch(url)
-        .then(function (res) { return res.json(); })
-        .then(function (cur) {
-          var body = { message: 'update apply data', content: utf8B64(JSON.stringify(applyItems, null, 2)) };
-          if (cur && cur.sha) body.sha = cur.sha;
-          return fetch(url, {
-            method: 'PUT',
-            headers: {
-              'Authorization': 'token ' + token,
-              'Content-Type': 'application/json',
-              'User-Agent': 'study-notes-site'
-            },
-            body: JSON.stringify(body)
-          });
+      var first = sha
+        ? Promise.resolve(sha)                    // 有本地 sha,直接用,避免缓存 404
+        : apiGet(url, token).then(function (s) { return s || null; }); // 没有则查一次(可能还不存在)
+
+      first
+        .then(function (s) { return apiPut(url, token, content, s); })
+        .then(function (r) {
+          if (r.status === 409 || (r.status === 422 && !sha)) { // sha 过期/未带(缓存 404 场景),拿最新再试一次
+            return apiGet(url, token).then(function (s) { return apiPut(url, token, content, s); });
+          }
+          return r;
         })
-        .then(function (res) {
-          if (!res.ok) throw new Error('HTTP ' + res.status);
-          return res.json();
-        })
-        .then(function () {
+        .then(function (r) {
+          if (r.status === 422 || r.status === 409) throw new Error(r.j && r.j.message ? r.j.message : 'HTTP ' + r.status);
+          if (r.status >= 400) throw new Error('HTTP ' + r.status);
+          if (r.j && r.j.content && r.j.content.sha) {
+            try { localStorage.setItem(applyShaKey, r.j.content.sha); } catch (e) {}
+          }
           try { localStorage.setItem(applyKey, JSON.stringify(applyItems)); } catch (e) {}
           applyStatusMsg('已保存 ✓ 约1分钟后所有设备可见', true);
         })
         .catch(function (err) {
-          applyStatusMsg('保存失败:请检查令牌/网络 (' + err.message + ')', false);
+          applyStatusMsg('保存失败:' + (err && err.message ? err.message : '请检查令牌/网络'), false);
         });
     }
     applySave.addEventListener('click', saveToRepo);
