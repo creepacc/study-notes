@@ -104,6 +104,12 @@
   function initNotesApp() {
     var listEl = document.getElementById('note-list');
     var contentEl = document.getElementById('note-content');
+    var tocEl = document.getElementById('toc-list');
+    var tocBox = document.getElementById('sidebar-toc');
+    var viewerEl = document.querySelector('.note-viewer');
+    var tocItems = [];
+    var lastActive = null;
+    var tocUid = 0;
     var notes = [];
 
     fetch('notes.json')
@@ -138,12 +144,79 @@
         .then(function (res) { return res.text(); })
         .then(function (md) {
           contentEl.innerHTML = marked.parse(md);
+          buildToc();
           contentEl.scrollTop = 0;
-          document.querySelector('.note-viewer').scrollTop = 0;
+          viewerEl.scrollTop = 0;
         })
         .catch(function () {
           contentEl.innerHTML = '<p class="loading">笔记内容加载失败</p>';
         });
+    }
+
+    /* ---------- 章节目录 ---------- */
+    function scrollToHeading(h) {
+      var top = h.getBoundingClientRect().top - viewerEl.getBoundingClientRect().top + viewerEl.scrollTop - 16;
+      viewerEl.scrollTo({ top: top, behavior: 'smooth' });
+    }
+
+    function scrollSpy() {
+      var line = viewerEl.getBoundingClientRect().top + 90;
+      var active = null;
+      for (var i = 0; i < tocItems.length; i++) {
+        if (tocItems[i].h.getBoundingClientRect().top <= line) active = tocItems[i];
+      }
+      if (active !== lastActive) {
+        if (lastActive) lastActive.a.classList.remove('active');
+        if (active) active.a.classList.add('active');
+        lastActive = active;
+      }
+    }
+
+    var spyTicking = false;
+    viewerEl.addEventListener('scroll', function () {
+      if (!spyTicking) {
+        spyTicking = true;
+        requestAnimationFrame(function () { scrollSpy(); spyTicking = false; });
+      }
+    });
+
+    function buildToc() {
+      tocEl.innerHTML = '';
+      tocItems = [];
+      lastActive = null;
+      var heads = contentEl.querySelectorAll('h2, h3');
+      if (!heads.length) { tocBox.hidden = true; return; }
+      tocBox.hidden = false;
+
+      var list = document.createElement('ul');
+      var lastH2Li = null;
+      heads.forEach(function (h) {
+        if (!h.id) h.id = 'sec-' + (++tocUid);
+        var li = document.createElement('li');
+        li.className = 'toc-' + h.tagName.toLowerCase();
+        var a = document.createElement('a');
+        a.href = '#' + h.id;
+        a.textContent = h.textContent;
+        a.addEventListener('click', function (e) {
+          e.preventDefault();
+          scrollToHeading(h);
+        });
+        li.appendChild(a);
+        tocItems.push({ h: h, a: a });
+
+        if (h.tagName === 'H2') {
+          lastH2Li = li;
+          list.appendChild(li);
+        } else if (lastH2Li) {
+          var sub = lastH2Li.querySelector('ul');
+          if (!sub) { sub = document.createElement('ul'); lastH2Li.appendChild(sub); }
+          sub.appendChild(li);
+        } else {
+          list.appendChild(li);
+        }
+      });
+      tocEl.appendChild(list);
+      scrollSpy();
     }
   }
 })();
