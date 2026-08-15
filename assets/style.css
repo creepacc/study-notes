@@ -234,10 +234,10 @@ a { color: inherit; text-decoration: none; }
   background: var(--bg-soft);
   border-right: 1px solid var(--border);
   overflow: hidden;
-  transition: transform .3s ease;
+  transition: margin-left .3s ease, transform .3s ease;
   z-index: 40;
 }
-.sidebar.hidden { transform: translateX(-100%); }
+.sidebar.hidden { margin-left: -300px; }
 .sidebar-head {
   padding: 18px 20px;
   border-bottom: 1px solid var(--border);
@@ -659,6 +659,7 @@ body.sidebar-gone .sidebar-float { display: inline-flex; }
     transform: translateX(-100%);
     box-shadow: 8px 0 40px rgba(0, 0, 0, 0.15);
   }
+  .sidebar.hidden { margin-left: 0; transform: translateX(-100%); }
   .sidebar.open { transform: translateX(0); }
   .sidebar-float { display: inline-flex; }
   .backdrop.show { display: block; }
