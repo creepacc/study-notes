@@ -44,8 +44,11 @@
               <div class="tree-row col"><span class="caret"></span><span class="tree-label">笔记</span></div>
               <ul class="tree-children" id="col-notes-tree"></ul>
             </li>
-            <li class="col-item" data-view="job">
-              <div class="tree-row col"><span class="tree-label">秋招投递以及面试经验</span></div>
+            <li class="col-item" data-view="apply">
+              <div class="tree-row col"><span class="tree-label">秋招投递</span></div>
+            </li>
+            <li class="col-item" data-view="interview">
+              <div class="tree-row col"><span class="tree-label">面试经验</span></div>
             </li>
           </ul>
         </nav>
@@ -80,15 +83,53 @@
           </div>
         </section>
 
-        <!-- 秋招投递以及面试经验 -->
-        <section class="view" id="view-job">
+        <!-- 秋招投递 -->
+        <section class="view" id="view-apply">
+          <header class="view-head">
+            <span class="view-title">秋招投递</span>
+            <button class="btn btn-sm" id="apply-add" type="button">
+              <span>添加</span>
+              <span class="btn-arrow">＋</span>
+            </button>
+          </header>
+          <div class="apply-body">
+            <div class="empty-view apply-empty" id="apply-empty">
+              <p class="empty-sub">还没有投递记录,点右上角「添加」开始跟踪</p>
+            </div>
+            <ul class="apply-list" id="apply-list"></ul>
+          </div>
+        </section>
+
+        <!-- 面试经验 -->
+        <section class="view" id="view-interview">
           <div class="empty-view">
-            <h1 class="empty-title">秋招投递以及面试经验</h1>
+            <h1 class="empty-title">面试经验</h1>
             <p class="empty-sub">暂无</p>
           </div>
         </section>
 
       </main>
+    </div>
+  </div>
+
+  <!-- 添加投递弹窗 -->
+  <div class="modal" id="apply-modal" hidden>
+    <div class="modal-card">
+      <h2 class="modal-title">添加投递</h2>
+      <form id="apply-form">
+        <label class="modal-field">
+          <span>公司名</span>
+          <input id="apply-company" type="text" placeholder="例如:字节跳动" autocomplete="off">
+        </label>
+        <label class="modal-field">
+          <span>招聘链接(选填)</span>
+          <input id="apply-link" type="url" placeholder="https://careers.example.com" autocomplete="off">
+        </label>
+        <div class="modal-actions">
+          <button type="button" class="btn-ghost" id="apply-cancel">取消</button>
+          <button type="submit" class="btn-submit">添加</button>
+        </div>
+      </form>
     </div>
   </div>
 

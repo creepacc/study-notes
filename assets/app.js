@@ -152,7 +152,8 @@
     var views = {
       resume: document.getElementById('view-resume'),
       notes: document.getElementById('view-notes'),
-      job: document.getElementById('view-job')
+      apply: document.getElementById('view-apply'),
+      interview: document.getElementById('view-interview')
     };
     var cols = colNav.querySelectorAll('.col-item');
 
@@ -296,5 +297,107 @@
       });
       scrollSpy();
     }
+
+    /* ---- 秋招投递跟踪 ---- */
+    var STATUSES = [
+      { key: 'screen', label: '初筛' },
+      { key: 'quiz', label: '测评' },
+      { key: 'written', label: '笔试' },
+      { key: 'interview', label: '面试' },
+      { key: 'offer', label: 'offer' }
+    ];
+    var applyKey = 'site:apply';
+    var applyList = document.getElementById('apply-list');
+    var applyEmpty = document.getElementById('apply-empty');
+    var applyModal = document.getElementById('apply-modal');
+    var applyForm = document.getElementById('apply-form');
+    var applyCompany = document.getElementById('apply-company');
+    var applyLink = document.getElementById('apply-link');
+    var applyItems = [];
+    var applyUid = 0;
+
+    try { applyItems = JSON.parse(localStorage.getItem(applyKey) || '[]'); } catch (e) { applyItems = []; }
+    applyItems.forEach(function (it) {
+      if (!STATUSES.some(function (s) { return s.key === it.status; })) it.status = 'screen';
+      if (it.id > applyUid) applyUid = it.id;
+    });
+
+    function saveApply() {
+      try { localStorage.setItem(applyKey, JSON.stringify(applyItems)); } catch (e) {}
+    }
+
+    function renderApply() {
+      applyList.innerHTML = '';
+      applyEmpty.style.display = applyItems.length ? 'none' : '';
+      applyItems.forEach(function (it) {
+        var li = document.createElement('li');
+        li.className = 'apply-item status-' + it.status;
+
+        var info = document.createElement('div');
+        info.className = 'apply-info';
+        var name = document.createElement('span');
+        name.className = 'apply-name';
+        name.textContent = it.company;
+        info.appendChild(name);
+        if (it.link) {
+          var a = document.createElement('a');
+          a.className = 'apply-link';
+          a.href = it.link;
+          a.target = '_blank';
+          a.rel = 'noopener';
+          a.textContent = '招聘链接 ↗';
+          info.appendChild(a);
+        }
+
+        var wrap = document.createElement('span');
+        wrap.className = 'apply-status-wrap';
+        var sel = document.createElement('select');
+        sel.className = 'apply-status';
+        STATUSES.forEach(function (s) {
+          var opt = document.createElement('option');
+          opt.value = s.key;
+          opt.textContent = s.label;
+          if (s.key === it.status) opt.selected = true;
+          sel.appendChild(opt);
+        });
+        sel.addEventListener('change', function () {
+          it.status = sel.value;
+          li.className = 'apply-item status-' + it.status;
+          saveApply();
+        });
+        wrap.appendChild(sel);
+
+        li.appendChild(info);
+        li.appendChild(wrap);
+        applyList.appendChild(li);
+      });
+    }
+
+    function openApplyModal() {
+      applyCompany.value = '';
+      applyLink.value = '';
+      applyModal.hidden = false;
+      applyCompany.focus();
+    }
+    function closeApplyModal() {
+      applyModal.hidden = true;
+    }
+    document.getElementById('apply-add').addEventListener('click', openApplyModal);
+    document.getElementById('apply-cancel').addEventListener('click', closeApplyModal);
+    applyModal.addEventListener('click', function (e) {
+      if (e.target === applyModal) closeApplyModal();
+    });
+    applyForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var name = applyCompany.value.trim();
+      if (!name) { applyCompany.focus(); return; }
+      var link = applyLink.value.trim();
+      applyItems.push({ id: ++applyUid, company: name, link: link, status: 'screen' });
+      saveApply();
+      renderApply();
+      closeApplyModal();
+    });
+
+    renderApply();
   }
 })();
