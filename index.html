@@ -11,6 +11,18 @@
 
   <!-- 密码门由 gate.js 注入 -->
 
+  <!-- 开屏动画 -->
+  <div id="splash" aria-hidden="true">
+    <canvas id="splash-canvas"></canvas>
+    <div class="splash-inner">
+      <div class="splash-mark">◇</div>
+      <h1 class="splash-title" id="splash-title">求职之路</h1>
+      <div class="splash-sub" id="splash-sub">记录 · 思考 · 成长</div>
+      <div class="splash-progress"><div class="splash-bar" id="splash-bar"></div></div>
+      <div class="splash-count" id="splash-count">00</div>
+    </div>
+  </div>
+
   <!-- 主应用 -->
   <div class="app" id="app">
 
@@ -131,7 +143,7 @@
   <!-- 添加投递弹窗 -->
   <div class="modal" id="add-modal" hidden>
     <div class="modal-card">
-      <h2 class="modal-title">添加投递</h2>
+      <h2 class="modal-title" id="add-modal-title">添加投递</h2>
       <form id="add-form">
         <label class="modal-field">
           <span>公司名</span>

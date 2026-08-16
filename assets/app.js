@@ -9,6 +9,90 @@
     initJobs();
     initNotes();
     initInterview();
+    if (document.getElementById('splash')) runSplash();
+  }
+
+  /* ================= 开屏动画 ================= */
+  function runSplash() {
+    var splash = document.getElementById('splash');
+    var canvas = document.getElementById('splash-canvas');
+    var title = document.getElementById('splash-title');
+    var sub = document.getElementById('splash-sub');
+    var bar = document.getElementById('splash-bar');
+    var count = document.getElementById('splash-count');
+
+    // 标题逐字拆开
+    var text = title.textContent.trim();
+    title.textContent = '';
+    Array.prototype.forEach.call(text, function (ch) {
+      var s = document.createElement('span');
+      s.className = 'letter';
+      s.textContent = ch;
+      s.style.setProperty('--i', title.children.length);
+      title.appendChild(s);
+    });
+
+    // 轻柔上浮粒子
+    var ctx = canvas.getContext('2d');
+    var W = 0, H = 0;
+    var parts = [];
+    function resize() {
+      W = canvas.width = splash.offsetWidth;
+      H = canvas.height = splash.offsetHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    for (var i = 0; i < 50; i++) {
+      parts.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 2 + 0.6,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: -(Math.random() * 0.5 + 0.1),
+        a: Math.random() * 0.5 + 0.15,
+        hue: Math.random() < 0.5 ? '14,159,110' : '20,184,166'
+      });
+    }
+    (function frame() {
+      ctx.clearRect(0, 0, W, H);
+      for (var k = 0; k < parts.length; k++) {
+        var p = parts[k];
+        p.x += p.vx; p.y += p.vy;
+        if (p.y < -10) { p.y = H + 10; p.x = Math.random() * W; }
+        if (p.x < -10) p.x = W + 10;
+        if (p.x > W + 10) p.x = -10;
+        var g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 4);
+        g.addColorStop(0, 'rgba(' + p.hue + ',' + p.a + ')');
+        g.addColorStop(1, 'rgba(' + p.hue + ',0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r * 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      requestAnimationFrame(frame);
+    })();
+
+    requestAnimationFrame(function () { title.classList.add('on'); });
+    setTimeout(function () { sub.classList.add('on'); }, 520);
+
+    var dur = 1700;
+    var start = performance.now();
+    (function tick(now) {
+      var p = Math.min(1, (now - start) / dur);
+      var eased = 1 - Math.pow(1 - p, 3);
+      bar.style.width = (eased * 100).toFixed(1) + '%';
+      count.textContent = String(Math.round(eased * 100)).padStart(2, '0');
+      if (p < 1) {
+        requestAnimationFrame(tick);
+      } else {
+        setTimeout(function () {
+          splash.classList.add('out');
+          setTimeout(function () {
+            if (splash.parentNode) splash.parentNode.removeChild(splash);
+          }, 800);
+        }, 200);
+      }
+    })(start);
   }
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -81,6 +165,7 @@
   var jobs = [];
   var filter = 'all';
   var uid = 0;
+  var editingId = null;
   var jobListEl, jobStatsEl, jobEmptyEl, filterBarEl;
 
   function initJobs() {
@@ -89,7 +174,7 @@
     jobEmptyEl = document.getElementById('jobs-empty');
     filterBarEl = document.getElementById('filter-bar');
 
-    document.getElementById('add-job').addEventListener('click', openAddModal);
+    document.getElementById('add-job').addEventListener('click', function () { openAddModal(); });
     document.getElementById('add-cancel').addEventListener('click', closeAddModal);
     document.getElementById('add-modal').addEventListener('click', function (e) {
       if (e.target === this) closeAddModal();
@@ -280,6 +365,16 @@
     });
     controls.appendChild(noteBtn);
 
+    var editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.className = 'job-btn';
+    editBtn.textContent = '✎';
+    editBtn.title = '编辑(公司/链接/日期)';
+    editBtn.addEventListener('click', function () {
+      openAddModal(it);
+    });
+    controls.appendChild(editBtn);
+
     var delBtn = document.createElement('button');
     delBtn.type = 'button';
     delBtn.className = 'job-btn del';
@@ -332,12 +427,14 @@
     return s;
   }
 
-  /* ---- 添加弹窗 ---- */
-  function openAddModal() {
-    document.getElementById('add-company').value = '';
-    document.getElementById('add-link').value = '';
-    document.getElementById('add-date').value = '';
-    document.getElementById('add-status').value = 'applied';
+  /* ---- 添加 / 编辑弹窗 ---- */
+  function openAddModal(job) {
+    editingId = job ? job.id : null;
+    document.getElementById('add-company').value = job ? job.company : '';
+    document.getElementById('add-link').value = job ? job.link : '';
+    document.getElementById('add-date').value = job ? job.date : '';
+    document.getElementById('add-status').value = job ? job.status : 'applied';
+    document.getElementById('add-modal-title').textContent = job ? '编辑投递' : '添加投递';
     document.getElementById('add-modal').hidden = false;
     document.getElementById('add-company').focus();
   }
@@ -348,14 +445,28 @@
     e.preventDefault();
     var company = document.getElementById('add-company').value.trim();
     if (!company) { document.getElementById('add-company').focus(); return; }
-    jobs.push({
-      id: ++uid,
-      company: company,
-      link: document.getElementById('add-link').value.trim(),
-      date: document.getElementById('add-date').value,
-      status: document.getElementById('add-status').value,
-      note: ''
-    });
+    var link = document.getElementById('add-link').value.trim();
+    var date = document.getElementById('add-date').value;
+    var status = document.getElementById('add-status').value;
+    if (editingId != null) {
+      var it = null;
+      for (var i = 0; i < jobs.length; i++) if (jobs[i].id === editingId) it = jobs[i];
+      if (it) {
+        it.company = company;
+        it.link = link;
+        it.date = date;
+        it.status = status;
+      }
+    } else {
+      jobs.push({
+        id: ++uid,
+        company: company,
+        link: link,
+        date: date,
+        status: status,
+        note: ''
+      });
+    }
     saveLocal();
     renderJobs();
     closeAddModal();
