@@ -2,8 +2,7 @@
 (function () {
   'use strict';
 
-  // 通行密码的 SHA-256(hex)。修改密码: 对明文算 sha256 hex 替换此处。
-  // 生成: node -e "console.log(require('crypto').createHash('sha256').update('你的密码').digest('hex'))"
+  // 通行密码的 SHA-256(hex): sha256("88888888")
   var PASS_HASH = '615ed7fb1504b0c724a296d7a69e6c7b2f9ea2c57c1d8206c5afdf392ebdfd25';
   var KEY = 'site:unlocked';
 
@@ -36,7 +35,7 @@
     setTimeout(function () {
       window.dispatchEvent(new CustomEvent('site:unlocked'));
       if (gateEl.parentNode) gateEl.parentNode.removeChild(gateEl);
-    }, 600);
+    }, 450);
   }
 
   function buildGate() {
@@ -45,9 +44,9 @@
     div.className = 'gate';
     div.innerHTML =
       '<div class="gate-card">' +
-        '<div class="gate-badge">Private · Locked</div>' +
-        '<h1 class="gate-title">沉淀</h1>' +
-        '<p class="gate-sub">输入通行密码进入</p>' +
+        '<div class="gate-logo">◇</div>' +
+        '<h1 class="gate-title">求职之路</h1>' +
+        '<p class="gate-sub">私人站点 · 输入通行密码进入</p>' +
         '<form class="gate-form" autocomplete="off">' +
           '<input class="gate-input" type="password" placeholder="通行密码" />' +
           '<button class="gate-btn" type="submit">进入</button>' +

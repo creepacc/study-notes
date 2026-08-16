@@ -3,141 +3,160 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>沉淀 · 个人知识库</title>
+<title>求职之路 · 王博</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%230e9f6e'/%3E%3Cstop offset='1' stop-color='%2314b8a6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='22' fill='url(%23g)'/%3E%3Ctext x='50' y='70' font-size='56' text-anchor='middle' fill='white'%3E%E2%99%A6%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
 
-  <!-- 开场动画 -->
-  <div id="intro" aria-hidden="true">
-    <canvas id="intro-canvas"></canvas>
-    <div class="intro-inner">
-      <div class="intro-badge">Personal · Knowledge Base</div>
-      <h1 class="intro-title" id="intro-title">沉淀</h1>
-      <div class="intro-sub" id="intro-sub">记录 · 思考 · 成长</div>
-      <div class="intro-progress"><div class="intro-progress-bar" id="intro-bar"></div></div>
-      <div class="intro-count" id="intro-count">00</div>
-    </div>
-  </div>
+  <!-- 密码门由 gate.js 注入 -->
 
-  <!-- 主内容 -->
-  <div id="main">
-    <div class="app-shell">
+  <!-- 主应用 -->
+  <div class="app" id="app">
 
-      <!-- 全局左侧导航 -->
-      <aside class="sidebar" id="sidebar">
-        <div class="sidebar-head">
-          <div class="brand-row">
-            <span class="logo">◆ 沉淀</span>
-            <div class="brand-actions">
-              <span class="theme-toggle"></span>
-              <button class="icon-btn" id="sidebar-hide" title="隐藏导航" aria-label="隐藏导航">⏴</button>
+    <!-- 顶部导航 -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">◇</span>
+        <span>求职之路</span>
+      </div>
+      <nav class="nav" id="nav">
+        <button class="nav-tab active" data-view="jobs">
+          <span class="tab-ico">📋</span><span>求职记录</span>
+        </button>
+        <button class="nav-tab" data-view="notes">
+          <span class="tab-ico">📝</span><span>学习笔记</span>
+        </button>
+        <button class="nav-tab" data-view="resume">
+          <span class="tab-ico">📄</span><span>简历</span>
+        </button>
+        <button class="nav-tab" data-view="interview">
+          <span class="tab-ico">💬</span><span>面试经验</span>
+        </button>
+      </nav>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="theme-btn" title="切换主题" aria-label="切换主题">☾</button>
+        <button class="logout-btn" id="logout-btn">退出</button>
+      </div>
+    </header>
+
+    <!-- 视图区 -->
+    <main class="main" id="main">
+
+      <!-- 求职记录 -->
+      <section class="view active" id="view-jobs">
+        <div class="view-pad">
+          <div class="view-head">
+            <div>
+              <div class="view-title">求职记录</div>
+              <div class="view-sub">记录每一次投递与面试,阶段实时跟踪</div>
+            </div>
+            <div class="view-actions">
+              <span class="save-status" id="save-status"></span>
+              <button class="btn-ghost" id="save-repo" type="button">保存到网页</button>
+              <button class="btn" id="add-job" type="button">＋ 添加投递</button>
+            </div>
+          </div>
+
+          <div class="jobs-stats" id="jobs-stats"></div>
+          <div class="filter-bar" id="filter-bar"></div>
+
+          <div class="empty-view" id="jobs-empty" hidden>
+            <div class="empty-ico">📋</div>
+            <p>还没有投递记录,点右上角「添加投递」开始跟踪</p>
+          </div>
+          <div class="jobs-list" id="jobs-list"></div>
+        </div>
+      </section>
+
+      <!-- 学习笔记 -->
+      <section class="view" id="view-notes">
+        <div class="view-pad">
+          <div class="view-head">
+            <div>
+              <div class="view-title">学习笔记</div>
+              <div class="view-sub">推理优化 · TensorRT-LLM · 部署实践</div>
+            </div>
+          </div>
+          <div class="note-picker" id="note-picker"></div>
+          <div class="notes-layout">
+            <aside class="notes-toc" id="notes-toc"></aside>
+            <div class="notes-body">
+              <article class="note-viewer">
+                <div class="note-content" id="note-content"><div class="loading">加载中…</div></div>
+              </article>
             </div>
           </div>
         </div>
-        <nav class="col-nav" id="col-nav">
-          <ul>
-            <li class="col-item" data-view="resume">
-              <div class="tree-row col"><span class="tree-label">简历</span></div>
-            </li>
-            <li class="col-item tree-folder" data-view="notes" id="col-notes">
-              <div class="tree-row col"><span class="caret"></span><span class="tree-label">笔记</span></div>
-              <ul class="tree-children" id="col-notes-tree"></ul>
-            </li>
-            <li class="col-item" data-view="apply">
-              <div class="tree-row col"><span class="tree-label">秋招投递</span></div>
-            </li>
-            <li class="col-item" data-view="interview">
-              <div class="tree-row col"><span class="tree-label">面试经验</span></div>
-            </li>
-          </ul>
-        </nav>
-      </aside>
+      </section>
 
-      <button class="sidebar-float" id="sidebar-open" title="展开导航" aria-label="展开导航">☰</button>
-      <div class="backdrop" id="backdrop"></div>
-
-      <!-- 视图区 -->
-      <main class="main">
-
-        <!-- 简历 -->
-        <section class="view" id="view-resume">
-          <header class="view-head">
-            <span class="view-title">简历</span>
-            <a class="btn btn-sm" href="学习笔记/简历/王博_简历.pdf" download>
-              <span>下载简历</span>
-              <span class="btn-arrow">↓</span>
-            </a>
-          </header>
-          <div class="resume-body">
-            <img class="resume-img" src="学习笔记/简历/王博_简历.png" alt="王博简历" />
-          </div>
-        </section>
-
-        <!-- 笔记 -->
-        <section class="view" id="view-notes">
-          <div class="note-viewer">
-            <article class="note-content" id="note-content">
-              <div class="loading">加载中…</div>
-            </article>
-          </div>
-        </section>
-
-        <!-- 秋招投递 -->
-        <section class="view" id="view-apply">
-          <header class="view-head">
-            <span class="view-title">秋招投递</span>
+      <!-- 简历 -->
+      <section class="view" id="view-resume">
+        <div class="view-pad">
+          <div class="view-head">
+            <div>
+              <div class="view-title">简历</div>
+              <div class="view-sub">模型量化部署工程师 · 王博</div>
+            </div>
             <div class="view-actions">
-              <span class="apply-save-status" id="apply-save-status"></span>
-              <button class="btn btn-sm btn-ghost" id="apply-save" type="button">保存到网页</button>
-              <button class="btn btn-sm" id="apply-add" type="button">
-                <span>添加</span>
-                <span class="btn-arrow">＋</span>
-              </button>
+              <a class="btn" href="学习笔记/简历/王博_简历.pdf" download>
+                <span>下载简历</span><span>↓</span>
+              </a>
             </div>
-          </header>
-          <div class="apply-body">
-            <div class="empty-view apply-empty" id="apply-empty">
-              <p class="empty-sub">还没有投递记录,点右上角「添加」开始跟踪</p>
+          </div>
+          <div class="resume-body">
+            <img class="resume-img" src="学习笔记/简历/王博_简历.png" alt="王博简历">
+          </div>
+        </div>
+      </section>
+
+      <!-- 面试经验 -->
+      <section class="view" id="view-interview">
+        <div class="view-pad">
+          <div class="view-head">
+            <div>
+              <div class="view-title">面试经验</div>
+              <div class="view-sub">每一次面试都是一次复盘</div>
             </div>
-            <ul class="apply-list" id="apply-list"></ul>
           </div>
-        </section>
+          <article class="note-viewer interview-body">
+            <div class="note-content" id="interview-content"><div class="loading">加载中…</div></div>
+          </article>
+        </div>
+      </section>
 
-        <!-- 面试经验 -->
-        <section class="view" id="view-interview">
-          <div class="empty-view">
-            <h1 class="empty-title">面试经验</h1>
-            <p class="empty-sub">暂无</p>
-          </div>
-        </section>
-
-      </main>
-    </div>
+    </main>
   </div>
 
   <!-- 添加投递弹窗 -->
-  <div class="modal" id="apply-modal" hidden>
+  <div class="modal" id="add-modal" hidden>
     <div class="modal-card">
       <h2 class="modal-title">添加投递</h2>
-      <form id="apply-form">
+      <form id="add-form">
         <label class="modal-field">
           <span>公司名</span>
-          <input id="apply-company" type="text" placeholder="例如:字节跳动" autocomplete="off">
+          <input id="add-company" type="text" placeholder="例如:字节跳动" autocomplete="off">
         </label>
         <label class="modal-field">
           <span>招聘链接(选填)</span>
-          <input id="apply-link" type="url" placeholder="https://careers.example.com" autocomplete="off">
+          <input id="add-link" type="url" placeholder="https://careers.example.com" autocomplete="off">
+        </label>
+        <label class="modal-field">
+          <span>投递日期(选填)</span>
+          <input id="add-date" type="date" autocomplete="off">
+        </label>
+        <label class="modal-field">
+          <span>阶段</span>
+          <select id="add-status" class="modal-select"></select>
         </label>
         <div class="modal-actions">
-          <button type="button" class="btn-ghost" id="apply-cancel">取消</button>
-          <button type="submit" class="btn-submit">添加</button>
+          <button type="button" class="btn-ghost" id="add-cancel">取消</button>
+          <button type="submit" class="btn">添加</button>
         </div>
       </form>
     </div>
   </div>
 
-  <script src="assets/theme.js"></script>
   <script src="assets/gate.js"></script>
   <script src="assets/marked.min.js"></script>
   <script src="assets/app.js"></script>
